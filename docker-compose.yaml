@@ -1,0 +1,75 @@
+version: '3'
+services:
+  hk-nginx:
+   container_name: hk-nginx
+   image: nginx:1.13
+   restart: always
+   ports:
+   - 80:80
+   - 9066:9066
+   - 443:443
+   volumes:
+   - .:/application
+   - ./nginx/conf.d:/etc/nginx/conf.d
+   depends_on:
+   - app
+ 
+  hk-mysql:
+   container_name: hk-mysql
+   image: mysql/mysql-server:5.7
+   environment:
+     MYSQL_ROOT_PASSWORD: root
+     MYSQL_DATABASE: unimall
+     MYSQL_USER: unimall
+     MYSQL_PASSWORD: unimall
+   volumes:
+      - ./unimall/sql:/docker-entrypoint-initdb.d
+      - .:/app
+   ports:
+   - "13306:3306"
+   restart: always
+
+  rabbitmq:
+    image: rabbitmq:3.7.15
+    container_name: hk-rabbitmq
+    ports:
+      - "15672:15672" 
+      - "5672:5672"
+    restart: always
+    volumes:
+      - ./data:/var/lib/rabbitmq
+
+  redis:
+    image: redis:alpine
+    container_name: hk-redis
+    hostname: redis
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - ./redis/conf/redis.conf:/etc/redis/redis.conf
+      - ./redis/data:/data:rw
+    command:
+      redis-server /etc/redis/redis.conf --appendonly yes
+  
+  app:
+    restart: always
+    container_name: hk-app
+    build: ./unimall
+    working_dir: /app/unimall-launcher
+    volumes:
+      - ./unimall:/app
+      - ~/.m2:/root/.m2
+    expose:
+      - "8080"
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        cd /app
+        mvn install 
+        cd unimall-launcher
+        mvn clean package -Dmaven.test.skip=true
+        mvn clean spring-boot:run -Dmaven.test.skip=true
+    depends_on:
+      - hk-mysql

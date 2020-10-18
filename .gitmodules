@@ -1,0 +1,3 @@
+[submodule "unimall"]
+	path = unimall
+	url = https://gitee.com/iotechn/unimall.git
