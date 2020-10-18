@@ -31,4 +31,4 @@ https://gitee.com/iotechn/%#unimall#%
 
 note: 
 > 1,The mysql inside docker apply port use internal port, isn't external port 13306.
->
+> 2,The verification code required for administrator login is in the request log。
